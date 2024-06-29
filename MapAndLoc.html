@@ -1,0 +1,477 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Place Autocomplete</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.min.css" >
+
+    <meta charset="utf-8">
+    <style>
+      #map {
+  height: 100%;
+}
+
+/* Optional: Makes the sample page fill the window. */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #000000; /* Black background */
+  color: #A0A0A0; /* Light Grey text */
+}
+
+.controls {
+  margin-top: 10px;
+  border: 1px solid #00FF00; /* Neon Green border */
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 255, 0, 0.3); /* Green shadow */
+}
+
+#origin-input,
+#destination-input {
+  background-color: #333333; /* Dark Grey background */
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 200px;
+  color: #FFFFFF; /* White text */
+}
+
+#origin-input:focus,
+#destination-input:focus {
+  border-color: #00FF00; /* Neon Green border on focus */
+}
+
+#mode-selector {
+  color: #000000; /* Black text */
+  background-color: #00FF00; /* Neon Green background */
+  margin-left: 12px;
+  padding: 5px 11px 0px 11px;
+}
+
+#mode-selector label {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+li {
+  font-family: 'Georgia', serif;
+  color: #A0A0A0; /* Light Grey text */
+}
+
+    </style>
+  </head>
+  <body>
+  	<div class= "ui main container segment">
+  		<h1 style="font-size: 75px; font-family: georgia">Find Safest path</h1>
+  		<h2 style="text-align: right; font-family: georgia">Cause your closed ones are waiting...</h2>
+  	</div>
+    <input id="origin-input" class="controls" type="text"
+        placeholder="Enter an origin location">
+
+    <input id="destination-input" class="controls" type="text"
+        placeholder="Enter a destination location">
+
+    <div id="mode-selector" class="controls">
+      <input type="radio" name="type" id="changemode-walking" checked="checked">
+      <label for="changemode-walking">Walking</label>
+
+      <input type="radio" name="type" id="changemode-transit">
+      <label for="changemode-transit">Transit</label>
+
+      <input type="radio" name="type" id="changemode-driving">
+      <label for="changemode-driving">Driving</label>
+    </div>
+
+    <div id="map" class="ui container"></div>
+   <div class = "ui container">
+   	<h2>Choose the path with the least danger index for a safe travel!</h2>
+   </div>
+    
+       <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnveBGIHGiJf7TuEdIncwCE1YyKBc0XM0&libraries=places"
+        ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+   
+    <script>
+   
+      var  data=  [
+      {'lati': 88.1411, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.2915},
+{'lati': 88.3288, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 25.1813},
+{'lati': 88.3639, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 22.5726},
+{'lati': 88.3201, 'type': 'Feature', 'properties': {'mag': 4}, 'longi': 22.5958},
+{'lati': 88.4333, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 26.7271},
+{'lati': 88.264, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 27.041},
+{'lati': 87.3119, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 23.5204},
+{'lati': 87.3119, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 23.685},
+{'lati': 88.4875, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 22.7215},
+{'lati': 88.0588, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.0662},
+{'lati': 87.3237, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 22.346},
+{'lati': 88.502, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 23.403},
+{'lati': 88.4642, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 23.401},
+{'lati': 87.0656, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 23.2324},
+{'lati': 86.3658, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 23.3305},
+{'lati': 88.132, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 25.0108},
+{'lati': 87.6516, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.4489},
+{'lati': 88.2701, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 24.175},
+{'lati': 88.7316, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 26.5465},
+{'lati': 89.5271, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 26.489},
+{'lati': 89.5091, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 26.323},
+{'lati': 88.4878, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 22.7157},
+{'lati': 88.4016, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 22.3017},
+{'lati': 87.6877, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 23.8346},
+{'lati': 88.3088, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 22.8969},
+{'lati': 88.1198, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.7663},
+{'lati': 88.312, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 25.2705},
+{'lati': 88.4228, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.3568},
+{'lati': 88.3728, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.7182},
+{'lati': 88.4352, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 22.4306},
+{'lati': 88.4322, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 22.4488},
+{'lati': 88.1985, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.1925},
+{'lati': 88.1806, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.4746},
+{'lati': 88.0636, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.458},
+{'lati': 88.0926, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.4691},
+{'lati': 88.276, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.6175},
+{'lati': 88.5776, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 23.1761},
+{'lati': 88.3256, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 22.7894},
+{'lati': 88.3976, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.4633},
+{'lati': 88.6794, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 23.2197},
+{'lati': 88.452, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.9757},
+{'lati': 88.377, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 22.768},
+{'lati': 86.9885, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 22.4489},
+{'lati': 86.4729, 'type': 'Feature', 'properties': {'mag': 3}, 'longi': 22.5856},
+{'lati': 88.2522, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 24.104},
+{'lati': 88.4587, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 24.2347},
+{'lati': 88.77, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 25.214},
+{'lati': 88.2414, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 24.9228},
+{'lati': 88.1245, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.6165},
+{'lati': 88.466, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 25.6386},
+{'lati': 88.1971, 'type': 'Feature', 'properties': {'mag': 2}, 'longi': 26.2716},
+{'lati': 88.3452, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.4839},
+{'lati': 88.3662, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.4203},
+{'lati': 88.1953, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.2221},
+{'lati': 88.4903, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.3992},
+{'lati': 88.439, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.3003},
+{'lati': 88.5465, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.1456},
+{'lati': 88.445, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.1346},
+{'lati': 88.259, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.208},
+{'lati': 88.4351, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.012},
+{'lati': 88.5198, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.2416},
+{'lati': 88.2773, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.5795},
+{'lati': 88.4396, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.1397},
+{'lati': 87.5414, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 23.9057},
+{'lati': 87.3828, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 23.7986},
+{'lati': 87.6164, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 23.8311},
+{'lati': 87.9281, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 24.2656},
+{'lati': 87.8404, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 24.2888},
+{'lati': 87.781, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 24.1776},
+{'lati': 87.9238, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 24.1884},
+{'lati': 87.1296, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 23.6224},
+{'lati': 87.8102, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 24.5246},
+{'lati': 88.132, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.0108},
+{'lati': 88.1267, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.2835},
+{'lati': 88.1216, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 24.9873},
+{'lati': 88.0371, 'type': 'Feature', 'properties': {'mag': 1}, 'longi': 25.4324},
+{'lati': 87.984, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.5476},
+{'lati': 88.1744, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.1213},
+{'lati': 88.1411, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.2915},
+{'lati': 88.3288, 'type': 'Feature', 'properties': {'mag': 0}, 'longi': 25.1813}
+
+];
+        var map;
+        var directionsDisplay;
+          var directionsService;
+
+      function initMap(location) {
+         directionsService = new google.maps.DirectionsService();
+          directionsDisplay = new google.maps.DirectionsRenderer();
+          var loc = new google.maps.LatLng(location.coords.latitude,location.coords.longitude);
+        map = new google.maps.Map(document.getElementById('map'), {
+          mapTypeControl: false,
+          zoom: 7,
+          center: loc,
+          mapTypeId: 'terrain'
+        });
+        var marker = new google.maps.Marker({
+          position: loc,
+          map: map
+        }); 
+
+        // directionsDisplay.setMap(map);
+         directionsDisplay.setMap(map);
+         var script = document.createElement('script');
+        //script.src = 'helper.js';
+         document.getElementsByTagName('head')[0].appendChild(script);
+
+          map.data.setStyle(function(feature) {
+          var magnitude = feature.getProperty('mag');
+          console.log(typeof(magnitude));
+          return {
+            icon: getCircle(magnitude)
+          };
+        });
+        new AutocompleteDirectionsHandler(map);
+      }
+      function getCircle(magnitude) {
+        return {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: 'red',
+          fillOpacity: .2,
+          scale: Math.pow(2, magnitude) / 2,
+          strokeColor: 'white',
+          strokeWeight: .5
+        };
+      }
+
+       /**
+        * @constructor
+       */
+      function AutocompleteDirectionsHandler(map) {
+        this.map = map;
+        this.originPlaceId = null;
+        this.destinationPlaceId = null;
+        this.travelMode = 'WALKING';
+        var originInput = document.getElementById('origin-input');
+        var destinationInput = document.getElementById('destination-input');
+        var modeSelector = document.getElementById('mode-selector');
+        this.directionsService = new google.maps.DirectionsService;
+        this.directionsDisplay = new google.maps.DirectionsRenderer;
+        this.directionsDisplay.setMap(map);
+
+        var originAutocomplete = new google.maps.places.Autocomplete(
+            originInput, {placeIdOnly: true});
+        var destinationAutocomplete = new google.maps.places.Autocomplete(
+            destinationInput, {placeIdOnly: true});
+        this.setupClickListener('changemode-driving', 'DRIVING');
+        this.setupClickListener('changemode-walking', 'WALKING');
+        this.setupClickListener('changemode-transit', 'TRANSIT');
+        //this.setupClickListener('changemode-driving', 'DRIVING');
+
+        this.setupPlaceChangedListener(originAutocomplete, 'ORIG');
+        this.setupPlaceChangedListener(destinationAutocomplete, 'DEST');
+
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(originInput);
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(destinationInput);
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(modeSelector);
+      }
+
+      // Sets a listener on a radio button to change the filter type on Places
+      // Autocomplete.
+      AutocompleteDirectionsHandler.prototype.setupClickListener = function(id, mode) {
+        var radioButton = document.getElementById(id);
+        var me = this;
+        radioButton.addEventListener('click', function() {
+          me.travelMode = mode;
+          me.route();
+        });
+      };
+
+      AutocompleteDirectionsHandler.prototype.setupPlaceChangedListener = function(autocomplete, mode) {
+        var me = this;
+        autocomplete.bindTo('bounds', this.map);
+        autocomplete.addListener('place_changed', function() {
+          var place = autocomplete.getPlace();
+          if (!place.place_id) {
+            window.alert("Please select an option from the dropdown list.");
+            return;
+          }
+          if (mode === 'ORIG') {
+            me.originPlaceId = place.place_id;
+          } else {
+            me.destinationPlaceId = place.place_id;
+          }
+          me.route();
+        });
+
+      };
+
+      AutocompleteDirectionsHandler.prototype.route = function() {
+        if (!this.originPlaceId || !this.destinationPlaceId) {
+          return;
+        }
+        var me = this;
+
+        this.directionsService.route({
+          origin: {'placeId': this.originPlaceId},
+          destination: {'placeId': this.destinationPlaceId},
+          travelMode: this.travelMode,
+          provideRouteAlternatives: true,
+          unitSystem: google.maps.UnitSystem.METRIC
+        }, function(response, status) {
+          if (status === 'OK') {
+            var image1 = {
+          url: 'https://cdn.pixabay.com/photo/2012/04/23/16/54/warning-39047_640.png',
+          // This marker is 20 pixels wide by 32 pixels high.
+           scaledSize: new google.maps.Size(28, 28),
+         // size: new google.maps.Size(20, 32),
+    
+        };
+          var image2 = {
+          url: 'https://www.canada.ca/content/dam/hc-sc/migration/hc-sc/cps-spc/images/legislation/acts-lois/hazard-symbol-danger1.jpg',
+          // This marker is 20 pixels wide by 32 pixels high.
+           scaledSize: new google.maps.Size(28, 28),
+         // size: new google.maps.Size(20, 32),
+    
+        };
+        ;
+          var image3 = {
+          url: 'https://cdn3.iconfinder.com/data/icons/picons-weather/57/53_warning-256.png',
+          // This marker is 20 pixels wide by 32 pixels high.
+           scaledSize: new google.maps.Size(23, 23),
+         // size: new google.maps.Size(20, 32),
+    
+        };
+        var image4 = {
+          url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/SNice.svg/220px-SNice.svg.png',
+          // This marker is 20 pixels wide by 32 pixels high.
+           scaledSize: new google.maps.Size(23, 23),
+         // size: new google.maps.Size(20, 32),
+    
+        };
+        var image5 = {
+          url: 'https://static9.depositphotos.com/1431107/1143/i/950/depositphotos_11437164-stock-photo-green-tick.jpg',
+          // This marker is 20 pixels wide by 32 pixels high.
+           scaledSize: new google.maps.Size(23, 23),
+         // size: new google.maps.Size(20, 32),
+    
+        };
+        color=["purple","yellow","green","blue","pink"];
+            //me.directionsDisplay.setDirections(response);
+           console.log(response.routes.length);
+           var dindex=[];
+             for (var k = 0, len = response.routes.length; k < len; k++) {
+              dindex[k]=0;
+              var points = response.routes[k].overview_path;
+              //console.log("yayyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
+              //console.log(points.length);
+               new google.maps.DirectionsRenderer({
+                    map: map,
+                    directions: response,
+                    routeIndex: k,
+                     unitSystem: google.maps.UnitSystem.METRIC,
+                    provideRouteAlternatives: true,
+                      polylineOptions: {
+                    strokeColor: color[k],
+                    strokeOpacity: 0.7,
+                    strokeWeight: 10
+
+                }
+
+                });
+               //console.log(points);
+               //console.log(data);
+               var  infoWindow = new google.maps.InfoWindow;
+               var posInit;
+                        var count = 0;
+             for (var j = 0; j < points.length; j++) {
+                      for (var i = 0; i < data.length; i++) {
+                   
+                        var st1 = data[i].lati.toString();
+                        st1=st1.slice(0,(st1.indexOf("."))+3);
+                        var st3 = data[i].longi.toString();
+                        st3=st3.slice(0,(st3.indexOf("."))+3);
+                        var st2 = points[j].lng().toString();
+                        st2=st2.slice(0,(st2.indexOf("."))+3);
+                        var st4 = points[j].lat().toString();
+                        st4=st4.slice(0,(st4.indexOf("."))+3);
+                      
+                         if ((st1 === st2) && (st3 === st4))
+                          {
+                            count++;
+                              posInit = new google.maps.LatLng(data[i].longi,data[i].lati);
+                           
+                               if(data[i].properties.mag==4){
+         var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].longi,data[i].lati),
+          icon:image1,
+          map: map
+        });
+dindex[k]+=4;
+         }
+         else if(data[i].properties.mag==3){
+         var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].longi,data[i].lati),
+          icon:image2,
+          map: map
+        }); dindex[k]+=3;}
+       else if(data[i].properties.mag==2){
+         var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].longi,data[i].lati),
+          icon:image3,
+          map: map
+        }); dindex[k]+=2;}
+        else if(data[i].properties.mag==1){
+         var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].longi,data[i].lati),
+          icon:image4,
+          map: map
+        }); dindex[k]+=1;}
+        else if(data[i].properties.mag==0){
+         var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].longi,data[i].lati),
+          icon:image5,
+          map: map
+        }); }
+                        
+                  }
+                  }
+
+                }
+              
+ dindex[k]/=count;
+ var div = document.createElement('div');
+ div.className = "ui main container segment"
+ document.body.appendChild(div);
+ var colour = "color"+k,
+ 	 duration = "duration"+k,
+ 	 distance = "distance"+k,
+ 	 safetyi = "safetyi"+k;
+ div.innerHTML = '<ul class="msg"><li id='+colour+'></li><li id='+duration+'></li><li id='+distance+'></li><li id='+safetyi+'></li></ul>';
+  document.getElementById(colour).innerHTML = "Route Number:  " + k + " is colored " +
+      (color[k]) ;
+   document.getElementById(distance).innerHTML = "Distance  : " +
+      (response.routes[k].legs[0].distance.text) ;
+    //console.log((response.routes[i].legs[0].distance.value) / 1000 + "killo meters");
+    // Display the duration:
+    document.getElementById(duration).innerHTML = "Time duration for reaching : " +
+      response.routes[k].legs[0].duration.text;
+    console.log(response.routes[k].legs[0]);
+  infoWindow.setPosition(posInit);
+   var message = 'dangerIndex is :'+dindex[k];
+  document.getElementById(safetyi).innerHTML = message;
+  var dis='Route :'+k;
+   //infoWindow.setContent(dis);
+      //       infoWindow.open(map);
+ 
+          
+        }
+          //  console.log(dindex);
+var routes = response.routes;
+                    for (var j = 0; j < routes.length; j++) {
+                        var points = routes[j].overview_path;
+                        
+    
+                    }
+                    
+         
+          } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+        });
+      };
+  
+      $(document).ready(function(){
+        navigator.geolocation.getCurrentPosition(initMap);
+      });
+    </script>
+    
+  </body>
+</html>
