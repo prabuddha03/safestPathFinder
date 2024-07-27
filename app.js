@@ -35,7 +35,7 @@ app.get("/", function(req, res){
 	res.sendFile(path.join(__dirname + '/MapAndLoc.html'));
 });
 
-app.listen(3000, function(){
+app.listen(4000, function(){
     console.log("Safest Path");
 
 });
